@@ -1,0 +1,154 @@
+//===== rAthena Script =======================================
+//= Hiragana & Katagana Test
+//===== By: ==================================================
+//= Yuchinin
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= A simply script to learn and test your katagana & hiragana
+//=====******** Note ********=================================
+//= This script need my release of:
+//= 1. Common Useful Function	(common.txt)
+//= Better let it load first before adding this script.
+//===== Additional Comments: =================================
+//= 1.0 Initial release.
+//============================================================
+
+izlude,121,150,5	script	五十音図	768,{
+function arrhas;
+function arradd;
+function arrlist;
+deletearray @learn$,getarraysize(@learn$);
+deletearray @wrong$,getarraysize(@wrong$);
+	mes .n$,"初めまして、お名前わ？";
+	next;
+	input @in$;
+	mes "[ "+@in$+" ]","私わ"+@in$+"です！","よろしくお願いします";
+	@point = 0;
+	mes "特訓選択します～";
+	next;
+	@s = select("平仮名","片仮名");
+	@prefix$ = (@s==1?"hira":"kata");
+	mes (@s==1?"平仮名":"片仮名");
+	next;
+	if(select("読みます","問題")==1){
+		for(@x=0;@x<getarraysize(getd("."+@prefix$+"gana50$"));@x++){
+			mes getd("."+@prefix$+"gana50$["+@x+"]")+" pronounce as "+getd(".english50$["+@x+"]");
+			next;
+		}
+		end;
+	}
+	mes "問題分量？";
+	input @amount,10,getarraysize(.english50$);
+	mes "分量: "+@amount;
+	next;
+	mes .n$,"始る！";
+	next;
+	do{
+		@r = rand(getarraysize(.english50$));
+		@q$ = getd("."+@prefix$+"gana50$["+@r+"]");
+		@a$ = .english50$[@r];
+		if(arrhas("@learn$",@q$) || arrhas("@wrong$",@q$)) continue;
+		@point++;
+		mes @point+".　発音してください。","[ "+@q$+" ]";
+		input @in1$;
+		if(@in1$==@a$){
+			mes CStr("正解!","green"),"Answer is","[ "+CStr(@a$,"green")+" ]";
+			if(!arrhas("@learn$",@q$)) arradd("@learn$",@q$);
+		}else{
+			mes CStr("Wrong!","red"),"You should pronounce it","[ "+CStr(@a$,"green")+" ]";
+			if(!arrhas("@wrong$",@q$)) arradd("@wrong$",@q$);
+		}
+		//mes "Point: "+@point;
+		next;
+	}while(@point < @amount);
+	mes .n$,"おめでと～","特訓終了！";
+	next;
+	if(getarraysize(@learn$)){
+		mes .n$,"Learned List:";
+		arrlist("@learn$");
+	}else{
+		mes .n$,"Looks like you didn't learn anything this time...";
+	}
+	next;
+	if(getarraysize(@wrong$)){
+		mes .n$,"Wrong List:";
+		arrlist("@wrong$");
+	}else{
+		mes .n$,"Well done!","You score all the quiz!";
+	}
+	close;
+	
+function arrlist {
+	for(.@x=0;.@x<getarraysize(getd(getarg(0)));.@x++){
+		mes "  "+(.@x+1)+". "+getd(getarg(0)+"["+.@x+"]");
+	}
+	return;
+}
+
+function arrhas {
+	.@size = getarraysize(getd(getarg(0)));
+	for(.@x=0;.@x < .@size;.@x++){
+		if( getd(getarg(0)+"["+.@x+"]") == getarg(1) ){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+function arradd {
+	.@size = getarraysize(getd(getarg(0)));
+	set getd(getarg(0)+"["+.@size+"]"),getarg(1);
+	.@size2 = getarraysize(getd(getarg(0)));
+	if(.@size==.@size2) return 0;
+	return getarg(1);
+}
+	
+OnInit:
+.n$ = "[ 五十音図 ]";
+setarray .english50$,"a","i","u","e","o",
+					"ka","ki","ku","ke","ko",
+					"sa","shi","su","se","so",
+					"ta","chi","tsu","te","to",
+					"ha","hi","hu","he","ho",
+					"ma","mi","mu","me","mo",
+					"ya","yu","yo",
+					"ra","ri","ru","re","ro",
+					"wa","wo","nn",
+					"ga","gi","gu","ge","go",
+					"za","zi","zu","ze","zo",
+					"da","di","du","de","do",
+					"ba","bi","bu","be","bo",
+					"pa","pi","pu","pe","po";
+setarray .hiragana50$,"あ","い","う","え","お",
+					"か","き","く","け","こ",
+					"さ","し","す","せ","そ",
+					"た","ち","つ","て","と",
+					"は","ひ","ふ","へ","ほ",
+					"ま","み","む","め","も",
+					"や","ゆ","よ",
+					"ら","り","る","れ","ろ",
+					"わ","を","ん",
+					"が","ぎ","ぐ","げ","ご",
+					"ざ","じ","ず","ぜ","ぞ",
+					"だ","ぢ","づ","で","ど",
+					"ば","び","ぶ","べ","ぼ",
+					"ぱ","ぴ","ぷ","ぺ","ぽ";
+setarray .katagana50$,"ア","イ","ウ","エ","オ",
+					"カ","キ","ク","ケ","コ",
+					"サ","シ","ス","セ","ソ",
+					"タ","チ","ツ","テ","ト",
+					"ハ","ヒ","フ","ヘ","ホ",
+					"マ","ミ","ム","メ","モ",
+					"ヤ","ユ","ヨ",
+					"ラ","リ","ル","レ","ロ",
+					"ワ","ヲ","ン",
+					"ガ","ギ","グ","ゲ","ゴ",
+					"ザ","ジ","ズ","ゼ","ゾ",
+					"ダ","ヂ","ヅ","デ","ド",
+					"バ","ビ","ブ","ベ","ボ",
+					"パ","ピ","プ","ペ","ポ";
+					
+}
