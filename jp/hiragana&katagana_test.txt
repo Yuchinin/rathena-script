@@ -16,46 +16,47 @@
 //= 1.0 Initial release.
 //============================================================
 
-izlude,121,150,5	script	五十音図	768,{
+izlude,121,150,5	script	屲廫壒恾	768,{
 function arrhas;
 function arradd;
 function arrlist;
 deletearray @learn$,getarraysize(@learn$);
 deletearray @wrong$,getarraysize(@wrong$);
-	mes .n$,"初めまして、お名前わ？";
+	mes .n$,"弶傔傑偟偰丄偍柤慜傢丠";
 	next;
 	input @in$;
-	mes "[ "+@in$+" ]","私わ"+@in$+"です！","よろしくお願いします";
+	mes "[ "+@in$+" ]","巹傢"+@in$+"偱偡両","傛傠偟偔偍婅偄偟傑偡";
 	@point = 0;
-	mes "特訓選択します～";
+	mes "摿孭慖戰偟傑偡乣";
 	next;
-	@s = select("平仮名","片仮名");
+	@s = select("暯壖柤","曅壖柤");
 	@prefix$ = (@s==1?"hira":"kata");
-	mes (@s==1?"平仮名":"片仮名");
+	mes (@s==1?"暯壖柤":"曅壖柤");
 	next;
-	if(select("読みます","問題")==1){
+	if(select("撉傒傑偡","栤戣")==1){
 		for(@x=0;@x<getarraysize(getd("."+@prefix$+"gana50$"));@x++){
 			mes getd("."+@prefix$+"gana50$["+@x+"]")+" pronounce as "+getd(".english50$["+@x+"]");
 			next;
 		}
 		end;
 	}
-	mes "問題分量？";
+	mes "栤戣暘検丠";
 	input @amount,10,getarraysize(.english50$);
-	mes "分量: "+@amount;
+	mes "暘検: "+@amount;
 	next;
-	mes .n$,"始る！";
+	mes .n$,"巒傞両";
 	next;
+	@sec_use = gettimetick(2);
 	do{
 		@r = rand(getarraysize(.english50$));
 		@q$ = getd("."+@prefix$+"gana50$["+@r+"]");
 		@a$ = .english50$[@r];
 		if(arrhas("@learn$",@q$) || arrhas("@wrong$",@q$)) continue;
 		@point++;
-		mes @point+".　発音してください。","[ "+@q$+" ]";
+		mes @point+".丂敪壒偟偰偔偩偝偄丅","[ "+@q$+" ]";
 		input @in1$;
 		if(@in1$==@a$){
-			mes CStr("正解!","green"),"Answer is","[ "+CStr(@a$,"green")+" ]";
+			mes CStr("惓夝!","green"),"Answer is","[ "+CStr(@a$,"green")+" ]";
 			if(!arrhas("@learn$",@q$)) arradd("@learn$",@q$);
 		}else{
 			mes CStr("Wrong!","red"),"You should pronounce it","[ "+CStr(@a$,"green")+" ]";
@@ -64,7 +65,8 @@ deletearray @wrong$,getarraysize(@wrong$);
 		//mes "Point: "+@point;
 		next;
 	}while(@point < @amount);
-	mes .n$,"おめでと～","特訓終了！";
+	@sec_use = gettimetick(2) - @sec_use;
+	mes .n$,"偍傔偱偲乣","摿孭廔椆両","";
 	next;
 	if(getarraysize(@learn$)){
 		mes .n$,"Learned List:";
@@ -107,7 +109,7 @@ function arradd {
 }
 	
 OnInit:
-.n$ = "[ 五十音図 ]";
+.n$ = "[ 屲廫壒恾 ]";
 setarray .english50$,"a","i","u","e","o",
 					"ka","ki","ku","ke","ko",
 					"sa","shi","su","se","so",
@@ -119,36 +121,36 @@ setarray .english50$,"a","i","u","e","o",
 					"wa","wo","nn",
 					"ga","gi","gu","ge","go",
 					"za","zi","zu","ze","zo",
-					"da","di","du","de","do",
+					"da","zi","zu","de","do",
 					"ba","bi","bu","be","bo",
 					"pa","pi","pu","pe","po";
-setarray .hiragana50$,"あ","い","う","え","お",
-					"か","き","く","け","こ",
-					"さ","し","す","せ","そ",
-					"た","ち","つ","て","と",
-					"は","ひ","ふ","へ","ほ",
-					"ま","み","む","め","も",
-					"や","ゆ","よ",
-					"ら","り","る","れ","ろ",
-					"わ","を","ん",
-					"が","ぎ","ぐ","げ","ご",
-					"ざ","じ","ず","ぜ","ぞ",
-					"だ","ぢ","づ","で","ど",
-					"ば","び","ぶ","べ","ぼ",
-					"ぱ","ぴ","ぷ","ぺ","ぽ";
-setarray .katagana50$,"ア","イ","ウ","エ","オ",
-					"カ","キ","ク","ケ","コ",
-					"サ","シ","ス","セ","ソ",
-					"タ","チ","ツ","テ","ト",
-					"ハ","ヒ","フ","ヘ","ホ",
-					"マ","ミ","ム","メ","モ",
-					"ヤ","ユ","ヨ",
-					"ラ","リ","ル","レ","ロ",
-					"ワ","ヲ","ン",
-					"ガ","ギ","グ","ゲ","ゴ",
-					"ザ","ジ","ズ","ゼ","ゾ",
-					"ダ","ヂ","ヅ","デ","ド",
-					"バ","ビ","ブ","ベ","ボ",
-					"パ","ピ","プ","ペ","ポ";
+setarray .hiragana50$,"偁","偄","偆","偊","偍",
+					"偐","偒","偔","偗","偙",
+					"偝","偟","偡","偣","偦",
+					"偨","偪","偮","偰","偲",
+					"偼","傂","傆","傊","傎",
+					"傑","傒","傓","傔","傕",
+					"傗","備","傛",
+					"傜","傝","傞","傟","傠",
+					"傢","傪","傫",
+					"偑","偓","偖","偘","偛",
+					"偞","偠","偢","偤","偧",
+					"偩","偫","偯","偱","偳",
+					"偽","傃","傇","傋","傏",
+					"傁","傄","傉","傌","傐";
+setarray .katagana50$,"傾","僀","僂","僄","僆",
+					"僇","僉","僋","働","僐",
+					"僒","僔","僗","僙","僜",
+					"僞","僠","僣","僥","僩",
+					"僴","僸","僼","僿","儂",
+					"儅","儈","儉","儊","儌",
+					"儎","儐","儓",
+					"儔","儕","儖","儗","儘",
+					"儚","儝","儞",
+					"僈","僊","僌","僎","僑",
+					"僓","僕","僘","僛","僝",
+					"僟","僡","僤","僨","僪",
+					"僶","價","僽","儀","儃",
+					"僷","僺","僾","儁","億";
 					
 }
