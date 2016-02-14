@@ -1,0 +1,365 @@
+//===== rAthena Script =======================================
+//= Part Time System + Restaurant( Waiter , Chef , Bartender , etc )
+//===== By: ==================================================
+//= Yuchinin
+//===== Current Version: =====================================
+//= 1.1
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= A part time system I wrote for testing my skill.
+//= Currently only waiter part is completed.
+//= May contain bug or unfinish stuff
+//=====******** Note ********=================================
+//= This script need my release of:
+//= 1. Common Useful Function	(common.txt)
+//= 2. Part Time Function		(function.txt)
+//= Better let it load first before adding my other script.
+//===== Additional Comments: =================================
+//= 1.0 Initial release.
+//= 1.1 Fixed stuck when waiter claiming wages	(arrdel)
+//============================================================
+
+// Sub Job Manager	( Sub Job selection npc )
+doubrius,60,29,4	script	Sub Job Manager	109,{
+npcindistance();
+function jobSelect;
+	mes .npcName$,"Hello "+strcharinfo(0)+",";
+	if(!Sub_Job){
+		mes "It seen you haven't choose your Sub Job.","What Sub Job would you like to be?";
+		next;
+		jobSelect();
+	}else if(getSubJob()!="None"){
+		mes "Currently your Sub Job is "+CStr(getSubJob(),"red")+".";
+		mes "You can always change to another sub job.";
+		mes "But doing that you will "+CStr("lose all Sub Job progress","red")+".";
+		next;
+		mes .npcName$,"Do you still want to change your Sub Job?";
+		next;
+		if( select(CStr("Proceed to change Sub Job","red"),"No") == 1) {
+			mes .npcName$,"What Sub Job would you like to be?";
+			next;
+			jobSelect();
+		}
+	}
+	next;
+	mes .npcName$,"You can always type "+CStr("@subjob","BLUE")+" for more information";
+	close;
+
+onatcmd:
+SubStatus();
+end;
+
+function jobSelect {
+	.@m$ = "";
+	.@size = getarraysize(.jobList$);
+	for(.@x=0;.@x<.@size;.@x++){
+		.@m$ = .@m$ + (getSubJob()==.jobList$[.@x] || .@x==0?"":getSubJob()+" > "+.jobList$[.@x])+":";
+	}
+	.@s = select(.@m$);
+	.@s--;
+	Sub_Job = (.@s);
+	Sub_Job_Exp = 0;
+	mes .npcName$,"You Sub Job are now "+CStr(getSubJob(),"red")+".";
+	return;
+}
+
+OnInit:
+bindatcmd "subjob", strnpcinfo(0)+"::Onatcmd";
+setarray .jobList$,"None","Waiter";//,"Chef","Bartender";
+setarray .lvlreq,100,200,400,800,1600,3200,6400,12800,25600,51200;
+// Sub_Job
+// Sub_Job_Exp
+.npcName$ = "[ "+strnpcinfo(3)+" ]";
+}
+
+// Control almost all the part time npc
+-	script	CustomerManager	-1,{
+OnWaiterEnd:
+.order = 0;
+.ordered = 0;
+//.WaiterWages = 0;
+//.CurrentWaiter$ = "";
+.status = 0;
+end;
+
+OnChefEnd:
+.ChefWages = 0;
+.CurrentChef$ = "";
+end;
+
+OnPCLogoutEvent:
+if( arrhas(".CurrentWaiter$",strcharinfo(0)) ){
+	arrdel(".CurrentWaiter$",arrfind(".CurrentWaiter$",strcharinfo(0)));
+}
+end;
+
+OnInit:
+setarray .jobNumLimit,3,2;
+setarray .waitingtime,3*60,5*60;	// 5 min
+setarray .zenyPercent,5,10;			// index 0 = waiter, 1 = chef
+setarray .mealPrice,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000;
+setarray .npcView,891,908;			// npc sprite range
+setarray .npcWait$,"Ahh! This is going to be forever...","When my meal is going to come?!","I am hungry!","Where is my food?","This restaurant are so famous!","Hey do you try this restaurant before?","I can't wait any longer!","It seen tasty....","Owww I need to order more...";
+	for(.@x=1;.@x<=20;.@x++){
+		.@r = rand(.npcView[0],.npcView[1]);
+		.@w = setnpcdisplay("Customer#"+.@x,.@r);
+	}
+}
+
+// here are the customer
+// add as many as you need
+doubrius,42,36,5	script	Customer#1	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,40,36,5	script	Customer#2	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,46,36,5	script	Customer#3	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,48,36,5	script	Customer#4	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,48,32,0	script	Customer#5	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,46,32,0	script	Customer#6	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,42,32,0	script	Customer#7	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,40,32,0	script	Customer#8	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,40,26,5	script	Customer#9	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,42,26,5	script	Customer#10	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,46,26,5	script	Customer#11	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,48,26,5	script	Customer#12	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,53,26,5	script	Customer#13	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,55,26,5	script	Customer#14	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,55,22,0	script	Customer#15	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,48,22,0	script	Customer#16	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,46,22,0	script	Customer#17	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,42,22,0	script	Customer#18	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,53,22,0	script	Customer#19	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+doubrius,40,22,0	script	Customer#20	111,{F_Customer(); OnInit:F_Customer_Initialize();OnTimer1000:F_Customer_Tick();}
+
+// npc for watching and taking menu use for waiter
+doubrius,53,38,3	script	Restaurant Menu	857,{
+npcindistance();
+.@s = select( (invcountitem(.menuid,strnpcinfo(3)) && arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager")?"(Take "+getitemname(.menuid)+") Remaining ["+invcountitem(.menuid,strnpcinfo(3))+"]":""),(invcountitem(.menuid,strcharinfo(0)) && arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager")?"(Put Back "+getitemname(.menuid)+") Remaining ["+invcountitem(.menuid,strcharinfo(0))+"]":""),"Menu List");
+switch(.@s){
+	case 1:
+		invdelitem(.menuid,strnpcinfo(3));
+		invgetitem(.menuid,strcharinfo(0));
+		unittalk getcharid(3),"[Take] "+getitemname(.menuid);
+		break;
+	case 2:
+		unittalk getcharid(3),getitemname(invgetitem(invdelitem(.menuid,strcharinfo(0)),strnpcinfo(3)))+" put back!";
+		break;
+	case 3:
+		do{
+			.@id = MealList();
+			mes " "," ","======= Item Details ======="," > "+Itemlink(.@id),"Price: "+CZeny(getiteminfo(.@id,0)),"======= Item Details =======";
+			next;
+		}while(true);
+		break;
+}
+end;
+
+OnInit:
+	delwaitingroom;
+	waitingroom "Dish Menu",0;
+	.menuid = 25003;			// change this to your menu item
+	// this will remove all item on custom inventory
+	while(invcount("ALL")){
+		invclear("ALL");
+	}
+	//for(.@x=0;.@x<4;.@x++)
+		//invgetitem(.menuid,strnpcinfo(3));
+
+end;
+}
+
+// Npc Chef that cook food for waiter
+//doubrius_w1,251,295,3	script	Restaurant Chef	886,{
+doubrius,58,34,3	script	Restaurant Chef	886,{
+function statusPrint;
+npcindistance();
+mes "[Chef]";
+	if( arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") ){
+		statusPrint();
+		//mes "What dish you want to order?";
+		next;
+		.@id = MealList(getSubLvl());
+		//mes strcharinfo(0),Itemlink(.@id),"Please!";
+		//next;
+		//mes "[Chef]","Ok! Wait a moment~";
+		addOrder(.@id);
+	}else{
+		mes "Hey! What you want in kitchen?","Only assigned waiter are allow to enter here!";
+		close2;
+		//warp strnpcinfo(4),241,302;
+	}
+	end;
+
+OnTimer1000:
+if(.cooktick <0) .cooktick = callfunc("getMealLevel",.cooking[0])*.cooktime_mul;
+	delwaitingroom;
+	waitingroom "Cooking "+.cooktick,0;
+	if(.cooktick>=5 && .cooktick%5==0) {
+		specialeffect 609;emotion e_swt;
+	}else if(.cooktick==1){
+		specialeffect 608;
+	}else if(.cooktick == 0) {
+		emotion e_pif;
+		delwaitingroom;
+		invgetitem(.cooking[0],.table_npc$);
+		deletearray .cooking[0],1;
+		.@size = getarraysize(.cooking);
+		if(!.@size){
+			stopnpctimer;
+			.cooktick = -1;
+			end;
+		}
+	}
+	.cooktick--;
+	initnpctimer;
+end;
+
+function statusPrint {
+	mes "Cooking > ============",(getarraysize(.cooking)?Itemlink(.cooking[0]):CStr("None","red")),
+		"Pending List <========";
+	for(.@x=1;.@x<getarraysize(.cooking);.@x++){
+		mes Itemlink(.cooking[.@x]);
+	}
+	return;
+}
+
+OnInit:
+.cooktick = -1;				// dont touch this
+.cooktime_mul = 2;			// cook time multiply
+.table_npc$ = "Dish Table";	
+}
+
+// after chef npc done the cooking the food will be here
+//doubrius_w1,246,297,0	script	Dish Table	111,{
+doubrius,53,35,0	script	Dish Table	111,{
+npcindistance();
+	if( arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") ){
+		while( invcount(strnpcinfo(3)) ){
+			/*if( callfunc("invcount",strcharinfo(0)) > getSubLvl() ) {
+				unittalk getcharid(3),"I can't take more than "+callfunc("invcount",strcharinfo(0))+" dish!";end;
+			}*/
+			unittalk getcharid(3),"[Take] "+getitemname(invgetitem(invdelitem(invselect(strnpcinfo(3),"","["+CStr("Take","green")+"] "),strnpcinfo(3)),strcharinfo(0)));
+		};
+	}else{
+		mes "Better don't touch anything here...";
+	}
+	end;
+}
+
+// a trash can or whatever npc to remove your custom inventory item
+doubrius,53,32,0	script	Trash Can	111,{
+npcindistance();
+	if( arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") ){
+		while( invcount(strcharinfo(0)) ){
+			.@id = invselect(strcharinfo(0),"","["+CStr("Throw","red")+"] ");
+			unittalk getcharid(3),"[Throw] "+getitemname(invdelitem(.@id,strcharinfo(0)));
+		};
+	}else{
+		mes "A trash can here...";
+	}
+	end;
+}
+
+// use to start / end the waiter job / claim wages
+doubrius,56,34,4	script	Restaurant Manager	109,{
+npcindistance(5);
+	mes .npcname$;
+	if(getSubJob()=="Waiter"){
+		if( getarraysize(getVariable(".CurrentWaiter$","CustomerManager")) < getVariable(".jobNumLimit[0]","CustomerManager") && !arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") ){
+			mes "Hi "+strcharinfo(0)+" waiter, any free time?";
+			mes "I have a part time waiter quest, do you interested?";
+			next;
+			.@s = select("Count on me","No");
+			if(.@s==1){
+				mes .npcname$,"Now let's start!";
+				//initnpctimer;
+				arradd(".CurrentWaiter$",strcharinfo(0),"CustomerManager");
+				invgetitem(getVariable(".menuid","Restaurant Menu"),"Restaurant Menu",2);
+			}else{
+				mes "When you free please come to help us!";
+			}
+		}else if( arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") ){
+			if( getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager") ){
+				mes "Do you want to end the job and claim the wages?","Current wages is "+CZeny( getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager") );
+				next;
+				.@s = select("Claim "+CZeny( getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager") )+" and leave","No");
+				if(.@s==1){
+					mes .npcname$,"Here's "+CZeny( getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager") );
+					Zeny = Zeny + getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager");
+					.@index = arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager");
+					arrdel(".WaiterWages",.@index,"CustomerManager");
+					arrdel(".CurrentWaiter$",.@index,"CustomerManager");
+					invdelitem(getVariable(".menuid","Restaurant Menu"),strcharinfo(0),invcountitem(getVariable(".menuid","Restaurant Menu"),strcharinfo(0)));
+					goto OnWaiterEnd;
+				}else{
+					mes "Then keep it on!";
+				}
+			}else{
+				mes "What are you waiting for?","The customer is waiting!";
+			}
+		}else{
+			mes "We don't need more waiter.";
+		}
+	}else{
+		mes "Welcome to Wonderful Restaurant ~",(getvariableofnpc(.CurrentWaiter$,"CustomerManager")!=""?"Our Waiter now is "+getvariableofnpc(.CurrentWaiter$,"CustomerManager"):"We are hiring waiter now!");
+	}
+	end;
+	
+OnWaiterEnd:
+donpcevent "Restaurant Menu::OnInit";
+donpcevent "CustomerManager::OnWaiterEnd";
+end;
+
+// currently disable
+// 5 minute	
+//OnTimer600000:
+//OnTimer1200000:
+//set getvariableofnpc(.status,"CustomerManager"),1;
+//stopnpctimer;
+//setnpctimer 0;
+//end;
+	
+OnInit:
+.npcname$ = "[Restaurant Manager]";
+}
+
+/*
+doubrius,12,83,0	script	Map	111,{
+npcindistance();
+	mes "<NAVI>[South Restaurant]<INFO>doubrius,53,38,0,000,1</INFO></NAVI>";
+	close;
+}
+
+alberta,189,202,5	script	Aperture#Doubrius	75,{
+mes "[Aperture]","...";
+next;
+mes "[Aperture]","Do you wanna go to Doubrius?";
+next;
+mes "[Aperture]","I will bring you there for "+Czeny(.BasePrice)+" Zeny.";
+next;
+mes "[Aperture]","Deal?";
+next;
+.@select = select("Deal","Maybe no");
+if(.@select == 1){
+	if(Zeny >= .BasePrice){
+		mes "[Aperture]","...";
+		next;
+		mes "[Aperture]","Here we go...";
+		next;
+		Zeny = Zeny - .BasePrice;
+		warp "doubrius",147,27;
+	}else{
+		mes "[Aperture]","...";
+		next;
+		mes "[Aperture]","Did you run out of money? This isn't the amount I want...";
+	}
+}else{
+	mes "[Aperture]","...";
+	next;
+	mes "[Aperture]","Then bye.";
+}
+close;
+
+OnInit:
+.BasePrice = 50000;
+}
+*/

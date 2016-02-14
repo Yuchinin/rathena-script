@@ -1,0 +1,310 @@
+//===== rAthena Script =======================================
+//= Slot Machine + Bevarage Vending Machine (Simulate Vending Machine System)
+//===== By: ==================================================
+//= Yuchinin
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= A custom slot machine and vending machine I make few years ago.
+//= Using my Simulate Vending Machine System
+//= Need to insert coin to operate.
+//= It can also eject remaining coin for you.
+//= [ Note ] This is an rewrite from GmOcean Slot Machine.
+//= Part of the slot machine code are credited to GMOceon.
+//=====******** Note ********=================================
+//= This script need my release of:
+//= 1. Common Useful Function	(common.txt)
+//= Better let it load first before adding my other script.
+//= 2. You must also add vendingMachine.grf to your DATA.ini else it will not working properly
+//= 3. [Note] Some of the item data has been change ( 673,677,674,11506 ~ 11512 )
+//===== Additional Comments: =================================
+//= 1.0 Initial release.
+//============================================================
+
+Function	script	CCoin	{
+	.@coin = getarg(0);
+	if(.@coin==673) .@tmp$ = "BROWN";
+	else if(.@coin==677) .@tmp$ = "SILVER";
+	else if(.@coin==674) .@tmp$ = "MITHRIL";
+	return CStr(getitemname(.@coin)+" ["+CZeny(getiteminfo(.@coin,0))+"]",.@tmp$);
+}
+
+Function	script	EjectCoin	{	// EjectCoin({<coin left>,<coin type>})
+	.@coinleft = getarg(0,@coinamt);
+	.@var$ = getarg(1,".coin");
+	.ismachine = getarg(2,1);
+	.@size = getarraysize(getvariableofnpc(getd(.@var$),strnpcinfo(3)));
+	if(.ismachine) mes "Coin dropped out:";
+	else mes "Coin Get:";
+	for(.@i=.@size-1;.@i>=0;.@i--){
+		.@coin = getvariableofnpc(getd(.@var$+"["+.@i+"]"),strnpcinfo(3));
+		.@price = getiteminfo(getvariableofnpc(getd(.@var$+"["+.@i+"]"),strnpcinfo(3)),0);
+		.@bal = .@coinleft/.@price;
+		if(.@bal){
+			if(.ismachine){
+				for(.@y=0;.@y<.@bal;.@y++){
+					sleep2 250;
+					soundeffect "slot_jackpot.wav",1;
+				}
+			}
+			.@coinleft = .@coinleft-(.@bal*.@price);
+			getitem .@coin,.@bal;
+			mes .@bal+" x "+CCoin(.@coin);
+		}
+	}
+	@coinamt = 0;
+	next;
+	return;
+}
+
+Function	script	UsableCoin	{
+	.@var$ = getarg(0,".coin");
+	.@size = getarraysize(getvariableofnpc(getd(.@var$),strnpcinfo(3)));
+	mes "Usable Coin:";
+	for(.@i=0;.@i<.@size;.@i++){
+		// show usable coin
+		mes " ~ "+CCoin(getvariableofnpc(getd(.@var$+"["+.@i+"]"),strnpcinfo(3)));
+	}
+	return;
+}
+
+Function	script	HaveCoin	{
+	.@var$ = getarg(0,".coin");
+	.@eject = getarg(1,0);
+	.@max = getarg(2,0);
+	.@str$ = getarg(3,"Insert");
+	.@size = getarraysize(getvariableofnpc(getd(.@var$),strnpcinfo(3)));
+	for(.@i=0;.@i<.@size;.@i++){
+		.@coin = getvariableofnpc(getd(.@var$+"["+.@i+"]"),strnpcinfo(3));
+		set .@menustr$,.@menustr$ + (countitem(.@coin) && (.@max?(.@max-@coinamt)/getiteminfo(.@coin,0):1)?" >> "+.@str$+" "+CCoin(.@coin)+" <<  ("+CStr(countitem(.@coin),"RED")+"):":":");
+	}
+	if(.@eject) set .@menustr$,.@menustr$+(@coinamt?CStr(" << Eject  Coin >>","RED")+":":":");
+	return .@menustr$;
+}
+
+-	script	Slot Machine::cslotmachine	-1,{	// 563
+getmapxy(.@m$,.@x,.@y,0);
+getmapxy(.@m_n$,.@x_n,.@y_n,1);
+if(.@m$==.@m_n$ && .@x==.@x_n-2 && .@y==.@y_n) goto OnTouch;
+unitwalk getcharid(3),.@x_n-2,.@y_n;
+end;
+OnTouch:
+@coinamt = 0;
+mes "Play Slot Machine?";
+UsableCoin();
+next;
+select("Play","No");
+while( @menu == 1 ){
+do{
+mes "Bet: << "+CStr(CZeny(@coinamt),"RED")+" >>","Max Bet << "+CZeny(.max_bet)+" >>","=========================",
+	"PayTable: ","Three S  x10 >>   "+CZeny(10*@coinamt),	//Jack 	2
+				"Two S     x3 >>   "+CZeny(3*@coinamt),	//3rd	6
+				"One S >> "+(.tsm_prize[2]&&.tsm_prize[2]>.tsm_prize[1]?.tsm_prize[1]+"~"+.tsm_prize[2]:.tsm_prize[1])+"    "+getitemname(.tsm_prize[0]);	//Loss	8
+next;
+select(HaveCoin(".coin",0,.max_bet)+(@coinamt?CStr(" >> ====== [ Pull Level ] ====== <<","RED")+":":":"));
+if(@menu >= 1 && @menu <= getarraysize(.coin)) {
+	emotion e_dum,1;
+	delitem( .coin[@menu-1], 1 );
+	@coinamt = @coinamt + getiteminfo(.coin[@menu-1],0);
+	soundeffect "se_get_coin.wav",0;
+}
+}while(@menu >= 1 && @menu <= getarraysize(.coin) && @coinamt<.max_bet);
+// Rolling
+	emotion e_flash,1;
+	mes "Rolling...";
+	soundeffect "slot_pay_coin.wav",1;
+	.@1 = rand(1,100); //Rolls dice for Slot 1	// testing
+	.@2 = rand(1,100); //Rolls dice for Slot 2
+	.@3 = rand(1,100); //Rolls dice for Slot 3
+		if( .@1 <= atoi(.tsm_animate$[0]) && .@2 > atoi(.tsm_animate$[1]) && .@3 > atoi(.tsm_animate$[2]) ){ .@a = 11; }		// XOO
+		else if( .@1 > atoi(.tsm_animate$[0]) && .@2 <= atoi(.tsm_animate$[1]) && .@3 <= atoi(.tsm_animate$[2]) ){ .@a = 9; }	// OXX
+		else if( .@1 <= atoi(.tsm_animate$[0]) && .@2 > atoi(.tsm_animate$[1]) && .@3 <= atoi(.tsm_animate$[2]) ){ .@a = 13; }	// XOX
+		else if( .@1 > atoi(.tsm_animate$[0]) && .@2 <= atoi(.tsm_animate$[1]) && .@3 > atoi(.tsm_animate$[2]) ){ .@a = 7; }	// OXO
+		else if( .@1 <= atoi(.tsm_animate$[0]) && .@2 <= atoi(.tsm_animate$[1]) && .@3 > atoi(.tsm_animate$[2]) ){ .@a = 15; }	// XXO
+		else if( .@1 > atoi(.tsm_animate$[0]) && .@2 > atoi(.tsm_animate$[1]) && .@3 <= atoi(.tsm_animate$[2]) ){ .@a = 5; }	// OOX
+		else if( .@1 <= atoi(.tsm_animate$[0]) && .@2 <= atoi(.tsm_animate$[1]) && .@3 <= atoi(.tsm_animate$[2]) ){ .@a = 17; }	// XXX
+		else if( .@1 > atoi(.tsm_animate$[0]) && .@2 > atoi(.tsm_animate$[1]) && .@3 > atoi(.tsm_animate$[2]) ){ .@a = 3; }		// OOO
+	.@b = 1;
+	while( .@b < atoi(.tsm_animate$[.@a+1]) ) {
+		cutin .tsm_animate$[.@a] + .@b,4; sleep2 ( ( atoi(.tsm_animate$[getarraysize(.tsm_animate$)-1]) * 1000 ) / atoi(.tsm_animate$[.@a+1]) ); .@b++;
+		}
+	cutin .tsm_animate$[.@a] + atoi(.tsm_animate$[.@a+1]),4;
+		if( .@a == 11 || .@a == 5 || .@a == 7 || .@a == 3 ){
+			if(.@a == 11 || .@a == 5 || .@a == 7) .@amt = 3*@coinamt;
+			else if(.@a == 3) .@amt = 10*@coinamt;
+			else .@amt = 0;
+			emotion e_cash,1;
+			if(.@amt) EjectCoin(.@amt);
+		} else if( .@a == 9 || .@a == 13 || .@a == 15 ) {
+			emotion e_hmm,1;
+			soundeffect "slot_candrop.wav",1;
+			if(.tsm_prize[2]) getitem .tsm_prize[0], rand(.tsm_prize[1],.tsm_prize[2]);
+			else getitem .tsm_prize[0], .tsm_prize[1];
+		} else { emotion e_otl,1; }
+		@coinamt = 0;
+	if( select("Another Round:I'm done") == 2) { cutin "",255; close; }
+	next;
+	}
+end;
+
+OnInit:
+waitingroom "Slot Machine",0;
+
+//[0] = Fail Rate "Slot 1"
+//[1] = Fail Rate "Slot 2"
+//[2] = Fail Rate "Slot 3"
+//[3] = SSS (Do not change)
+//[4] = SSS_Count (Do not change)
+//[5] = SSF (Do not change)
+//[6] = SSF_Count (Do not change)
+//[7] = SFS (Do not change)
+//[8] = SFS_Count (Do not change)
+//[9] = SFF (Do not change)
+//[10] = SFF_Count (Do not change)
+//[11] = Animation Time (Do not change, for best results :D)
+setarray .tsm_animate$[0],"70","75","80","SSS_","41","SSF_","37","SFS_","41","SFF_","45","FSS_","41","FSF_","45","FFS_","41","FFF_","37","3";
+
+// Prize Settings
+// [0] = Item ID, [1] = Item Amount, [2] = Random Item Amount from [1] to [2];
+setarray .tsm_prize,673,1,0;
+
+// Payment Settings
+.max_bet = 100000; // Maximum Bet
+
+// Usable Coin
+setarray .coin,673,677,674;
+end;
+}
+
+airplane_01,49,43,0	duplicate(cslotmachine)	Slot Machine::slotmachine01	HIDDEN_NPC
+airplane_01,49,40,0	duplicate(cslotmachine)	Slot Machine::slotmachine02	HIDDEN_NPC
+airplane,49,43,0	duplicate(cslotmachine)	Slot Machine::slotmachine03	HIDDEN_NPC
+airplane,49,40,0	duplicate(cslotmachine)	Slot Machine::slotmachine04	HIDDEN_NPC
+airplane_01,49,82,0	duplicate(cslotmachine)	Slot Machine::slotmachine05	HIDDEN_NPC
+airplane_01,49,79,0	duplicate(cslotmachine)	Slot Machine::slotmachine06	HIDDEN_NPC
+airplane,49,82,0	duplicate(cslotmachine)	Slot Machine::slotmachine07	HIDDEN_NPC
+airplane,49,79,0	duplicate(cslotmachine)	Slot Machine::slotmachine08	HIDDEN_NPC
+
+moc_para01,34,38,5	script	Beverage Vending Machine::ven	564,{
+getmapxy(.@m$,.@x,.@y,0);
+getmapxy(.@m_n$,.@x_n,.@y_n,1);
+if(.@m$==.@m_n$ && .@x==.@x_n && .@y==.@y_n-2) goto OnTouch;
+unitwalk getcharid(3),.@x_n,.@y_n-2;
+end;
+OnTouch:
+function PriceList;function CMenu;function choose;function RES_TYPE;
+if(!getcharid(0)) end;
+mes "A "+.npcname$;
+UsableCoin();
+next;
+do{
+	PriceList();
+	next;
+	select(CMenu());
+	choose();
+}while(@menu != 4);	// 4 = eject coin and leave
+end;
+
+function RES_TYPE {
+	.@item = getarg(0);
+	if(.@item == 11506 || .@item == 11510) return CStr(getitemname(.@item),"RED");
+	else if(.@item == 11507 || .@item == 11511) return CStr(getitemname(.@item),"BLUE");
+	else if(.@item == 11509 || .@item == 11512) return CStr(getitemname(.@item),"PURPLE");
+	else if(.@item == 11508) return CStr(getitemname(.@item),"YELLOW");
+}
+
+function CMenu {
+	.@menustr$ = HaveCoin(".coin",1);
+	for(.@i=0;.@i<getarraysize(.itemlist);.@i+=2){
+		set .@menustr$,.@menustr$+(@coinamt>=.itemlist[.@i+1]?" Push [ "+RES_TYPE(.itemlist[.@i])+" ]:":":");
+	}
+	return .@menustr$;
+}
+
+function PriceList {
+	mes " Balance  << "+CStr(CZeny(@coinamt),"RED")+" >>";
+	for(.@i=0;.@i<getarraysize(.itemlist);.@i+=2){
+		mes "["+(@coinamt<.itemlist[.@i+1]?CStr("x","RED"):CStr("o","GREEN"))+"]["+CZeny(.itemlist[.@i+1])+"] "+ Itemlink(.itemlist[.@i]);
+		//mes "["+(@coinamt<.itemlist[.@i+1]?CStr("x","RED"):CStr("o","GREEN"))+"]["+CZeny(.itemlist[.@i+1])+"]"+getitemname(.itemlist[.@i]);
+		//debugmes ""+.itemlist[.@i+1];
+	}
+	return;
+}
+
+function choose {
+	if(@menu >= 1 && @menu <= getarraysize(.coin)) {	// Insert coin
+		delitem( .coin[@menu-1], 1 );
+		@coinamt = @coinamt + getiteminfo(.coin[@menu-1],0);
+		soundeffect "se_get_coin.wav",0;
+	}else if(@menu == 4){	// Eject coin
+		soundeffect "se_equip_item_01.wav",1;
+		sleep2 1000;
+		EjectCoin();
+	}else{
+		emotion e_ho,1;
+		//mes "["+getitemname(.itemlist[((@menu-5)*2)])+"] Pushed !";
+		soundeffect "se_equip_item_01.wav",1;
+		sleep2 1000;
+		soundeffect "slot_candrop.wav",1;
+		specialeffect 51;
+		@coinamt = @coinamt - .itemlist[((@menu-5)*2)+1];
+		getitem .itemlist[((@menu-5)*2)],1;
+		if(!rand(10)) {
+			sleep2 1000;
+			message strcharinfo(0),"Huh? ";
+			sleep2 500;
+			emotion e_flash,1;
+			soundeffect "slot_candrop.wav",1;
+			specialeffect 51;
+			getitem 11512,1;
+			message strcharinfo(0),getitemname(11512)+"?";
+		}
+		if(@coinamt!=0) {
+			sleep2 500;
+			EjectCoin();
+		}
+	}
+	return;
+}
+
+OnInit:
+waitingroom "Vending Machine",0;
+set .npcname$,CStr("[Beverage Vending Machine]","RED");
+setarray .coin,673,677,674;
+setarray .itemlist,11510,1800,11506,2800,11511,5800,11507,6800,11509,6500,11508,2000;
+
+// Below will change some item data =======================================
+setarray .@list,673,677,674;
+.@tmp = 10;
+for(.@i=0;.@i<3;.@i++){		// coin
+	.@tmp = .@tmp*10;
+	setiteminfo .@list[.@i],6,1;
+	setiteminfo .@list[.@i],1,0;
+	setiteminfo .@list[.@i],0,.@tmp;
+}
+	
+for(.@i=0;.@i<7;.@i++){		// beverage
+	setiteminfo 11506+.@i,6,100;
+	setiteminfo 11506+.@i,1,0;
+}
+setitemscript 11506,"{F_Beverage(11506,0,-10);}";	// 2800
+setitemscript 11507,"{F_Beverage(11507,1,-10);}";	// 6800
+setitemscript 11508,"{F_Beverage(11508,2);}";		// 2000
+setitemscript 11509,"{F_Beverage(11509,3,-10);}";	// 6500
+setitemscript 11510,"{F_Beverage(11510,0,1000);}";// 1800
+setitemscript 11511,"{F_Beverage(11511,1,100);}";	// 5800
+setitemscript 11512,"{F_Beverage(11512,4,-50);}";
+
+}
+// add or comment out to suit your server
+06guild_01,38,71,5	duplicate(ven)	Beverage Vending Machine::ven01	564
+06guild_02,38,71,5	duplicate(ven)	Beverage Vending Machine::ven02	564
+06guild_03,38,71,5	duplicate(ven)	Beverage Vending Machine::ven03	564
+06guild_04,38,71,5	duplicate(ven)	Beverage Vending Machine::ven04	564
+06guild_05,38,71,5	duplicate(ven)	Beverage Vending Machine::ven05	564
+airplane,71,81,5	duplicate(ven)	Beverage Vending Machine::ven06	564
+airplane_01,71,81,5	duplicate(ven)	Beverage Vending Machine::ven07	564
+airplane,60,81,5	duplicate(ven)	Beverage Vending Machine::ven08	564
+airplane_01,60,81,5	duplicate(ven)	Beverage Vending Machine::ven09	564

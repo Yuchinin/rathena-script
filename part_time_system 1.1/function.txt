@@ -1,0 +1,353 @@
+//===== rAthena Script =======================================
+//= Part Time Function 
+//===== By: ==================================================
+//= Yuchinin
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= A part time system I wrote for testing my skill.
+//= Currently only waiter part is completed.
+//= May contain bug or unfinish stuff
+//=====******** Note ********=================================
+//= This will add nothing but function for:
+//= ~ Part Time System + Restaurant( Waiter , Chef , Bartender , etc ) (npc.txt)
+//= Better let this load first before adding my other script.
+//===== Additional Comments: =================================
+//= 1.0 Initial release.
+//============================================================
+
+function	script	getSubJob	{return getvariableofnpc(.jobList$[Sub_Job],"Sub Job Manager");}
+
+function	script	getSubLvl	{
+	for(.@x=0; .@x < getarraysize(getvariableofnpc(.lvlreq,"Sub Job Manager"));.@x++){
+		if( Sub_Job_Exp < getvariableofnpc(.lvlreq[.@x],"Sub Job Manager") ) return .@x;
+	}
+	return getarraysize(getvariableofnpc(.lvlreq,"Sub Job Manager"));
+}
+
+function	script	getExpNext	{return (getSubLvl()>=10?0:getvariableofnpc(.lvlreq[getSubLvl()],"Sub Job Manager") - Sub_Job_Exp);}
+
+function	script	SubStatus	{
+.@exp = getarg(0,0);
+Sub_Job_Exp += .@exp;
+//if(Sub_Job_Exp > getvariableofnpc(.lvlreq[getarraysize(getvariableofnpc(.lvlreq,"Sub Job Manager"))],"Sub Job Manager")) Sub_Job_Exp = getvariableofnpc(.lvlreq[getarraysize(getvariableofnpc(.lvlreq,"Sub Job Manager"))],"Sub Job Manager");
+	dispbottom " ";
+	dispbottom "-------- Sub Job Status --------";
+	dispbottom "Level         : "+getSubLvl();
+	dispbottom "Job           : "+getSubJob();
+	dispbottom "Exp           : "+Sub_Job_Exp;
+	dispbottom "Exp Next   : "+getExpNext();
+	if(.@exp) dispbottom "Exp Gain   : "+.@exp;
+	dispbottom "--------------------------------";
+	dispbottom " ";
+	return;
+}
+
+function	script	addOrder	{
+	.@itemid = getarg(0);
+	.@npcChef$ = getarg(1,strnpcinfo(3));
+	.@size = getarraysize(getVariable(".cooking",.@npcChef$));
+	setVariable(".cooking["+.@size+"]",getarg(0),.@npcChef$);
+	setVariable(".ordered",getVariable(".ordered","CustomerManager")-1,"CustomerManager");
+	if(!getnpctimer(1,.@npcChef$)) initnpctimer(.@npcChef$);
+	return;
+}
+
+function	script	SJ_Chef	{
+	mes "Chef function";
+	return;
+}
+
+function	script	SJ_Brewer	{
+	mes "Brewer function";
+	return;
+}
+
+function	script	MealList	{
+	.@lvl = getarg(0,10);
+MAIN:
+	.@m$ = "";
+	for(.@x=0;.@x<=.@lvl;.@x++){
+		if(.@x==10) break;
+		.@m$ = .@m$ +"> Meal Cost "+CZeny(getvariableofnpc(.mealPrice[.@x],"CustomerManager"))+":";
+	}
+	.@s = select(.@m$);
+	.@s--;
+	.@sql = query_sql("SELECT ID FROM ragnarok.item_db_re where type = 0 AND price_buy > 2 AND (left(name_english, 8) = 'Str_Dish' OR left(name_english, 8) = 'Agi_Dish' OR left(name_english, 8) = 'Vit_Dish' OR left(name_english, 8) = 'Int_Dish' OR left(name_english, 8) = 'Dex_Dish' OR left(name_english, 8) = 'Luk_Dish') AND price_buy = "+getvariableofnpc(.mealPrice[.@s],"CustomerManager"),.@meal);
+	.@m$ = "";
+	.@m$ = CStr("Back","RED")+":";
+	for(.@x=0;.@x<getarraysize(.@meal);.@x++){
+		.@m$ = .@m$ +"> "+getitemname(.@meal[.@x])+":";
+	}
+	.@s = select(.@m$);
+	if(.@s==1) goto MAIN;
+	return .@meal[.@s-2];
+}
+
+/*======================================
+//= getMealLevel(<itemid>)
+========================================*/
+function	script	getMealLevel	{
+	.@itemid = getarg(0);
+	for(.@x=0;.@x<getarraysize(getvariableofnpc(.mealPrice,"CustomerManager"));.@x++){
+		if(getiteminfo(.@itemid,0) == getvariableofnpc(.mealPrice[.@x],"CustomerManager")) return .@x+1;
+	}
+	debugmes "getMealLevel failed Item ID: "+.@itemid+" Item Name: "+getiteminfo(.@itemid,0);
+	return -1;
+}
+
+/*======================================
+//= getMealData(<mode>,{<num>})
+//= mode = 0 return random food id	(default)
+//= mode = 1 return random food id according to player sub job level
+//= num = 1 return integer
+//= num > 1 return string id list separate by "|"
+========================================*/
+function	script	getMealData	{
+	.@mode = getarg(0,0);
+	.@num = getarg(1,1);
+	if(.@mode==1 && getSubLvl() < 10){
+		query_sql("SELECT ID FROM ragnarok.item_db_re where type = 0 AND price_buy > 2 AND (left(name_english, 8) = 'Str_Dish' OR left(name_english, 8) = 'Agi_Dish' OR left(name_english, 8) = 'Vit_Dish' OR left(name_english, 8) = 'Int_Dish' OR left(name_english, 8) = 'Dex_Dish' OR left(name_english, 8) = 'Luk_Dish') AND price_buy <= "+getvariableofnpc(.mealPrice[getSubLvl()],"CustomerManager")+" order by rand() limit "+.@num,.@meal);
+	}else{
+		query_sql("SELECT ID FROM ragnarok.item_db_re where type = 0 AND price_buy > 2 AND (left(name_english, 8) = 'Str_Dish' OR left(name_english, 8) = 'Agi_Dish' OR left(name_english, 8) = 'Vit_Dish' OR left(name_english, 8) = 'Int_Dish' OR left(name_english, 8) = 'Dex_Dish' OR left(name_english, 8) = 'Luk_Dish') order by rand() limit "+.@num,.@meal);
+	}
+
+	.@idlist$ = "";
+	for(.@x=0;.@x < getarraysize(.@meal);.@x++){
+		.@idlist$ = .@idlist$ + .@meal[.@x]+(.@x != getarraysize(.@meal)-1?"|":"");
+	}
+	return .@idlist$;
+}
+
+function	script	SJ_Waiter	{
+	setarray .@dialog0$,"Erm...I will try my best sir!";
+	return;
+}
+
+function	script	F_Customer_Tick	{
+	.@t = getVariable(".waitingtime");
+	//debugmes ".@t = "+.@t;
+	if(.@t == 90){
+		emotion e_hmm;
+		npctalk "Waiter?";
+	}else if(.@t == 60){
+		emotion e_bzz;
+		npctalk "Waiter??";
+	}else if(.@t == 45){
+		emotion e_yawn;
+	}else if(.@t == 30){
+		emotion e_an;
+		npctalk "Waiter!!?*&$#";
+	}else if(.@t <= 0){
+		callfunc("F_Customer_Refresh");
+	}
+	setVariable(".waitingtime",.@t-1);
+	initnpctimer;
+	end;
+}
+
+function	script	F_Customer_Initialize	{
+sleep 1;
+setVariable(".waitingtime",rand(getVariable(".waitingtime[0]","CustomerManager"),getVariable(".waitingtime[1]","CustomerManager")));
+initnpctimer;
+//setarray .dialog$,"Bla bla bla...","Gossiping...","Chatting...","Ahahahaha....","...I know...","...yeah...","...huh? really?";
+	while(true){
+		sleep rand(5,10)*1000;
+		if(getVariable(".order")<=1) continue;
+		if(getVariable(".order")==2 || getVariable(".order")==5){
+			emotion e_paper;
+		}else if(getVariable(".order")==4){
+			emotion e_loud;
+		}
+		/*else{
+			emotion e_loud;
+			npctalk .dialog$[rand(getarraysize(.dialog$))];
+		}*/
+	}
+}
+
+function	script	F_Customer_Refresh	{
+	//invdelitem(,strnpcinfo(3),)invcountitem(getVariable(".menuid","Restaurant Menu"))
+	stopnpctimer;
+	setnpctimer 0;
+	setVariable(".order",-1);
+	setVariable(".servingchar$","");
+	hideonnpc strnpcinfo(3);
+	sleep rand(10,60)*1000;
+	hideoffnpc strnpcinfo(3);
+	setVariable(".order",0);
+	setVariable(".waitingtime",rand(getVariable(".waitingtime[0]","CustomerManager"),getVariable(".waitingtime[1]","CustomerManager")));
+	setnpcdisplay strnpcinfo(3),rand(getvariableofnpc(.npcView[0],"CustomerManager"),getvariableofnpc(.npcView[1],"CustomerManager"));
+	initnpctimer;
+	end;
+}
+
+function	script	F_Customer_OrderList	{
+	.@new = getarg(0,0);
+	.@print = getarg(1,0);
+	.@price = getarg(2,0);
+	if(.@new){
+		.@print = 1;
+		deletearray getVariable(".meal[0]"),getarraysize(getVariable(".meal"));
+		.@r = rand(1,getSubLvl()/2);
+		if(.@r<=0) .@r = 1;
+		.@data$ = getMealData(1,.@r);
+		//debugmes .@data$;
+		explode(.@mealarray$,.@data$,"|");
+		for(.@x=0;.@x < .@r;.@x++){
+			setVariable(".meal["+.@x+"]",atoi(.@mealarray$[.@x]));
+			setVariable(".waitingtime",getVariable(".waitingtime")+(getMealLevel(getVariable(".meal["+.@x+"]"))*getVariable(".cooktime_mul","Restaurant Chef")));
+			//if(rand(getSubLvl())>= rand(1,10)) addOrder(getVariable(".meal["+.@x+"]"),"Restaurant Chef");
+			addOrder(getVariable(".meal["+.@x+"]"),"Restaurant Chef");
+		}
+	}
+	.@n = getarraysize(getVariable(".meal"));
+	for(.@x=0; .@x < getarraysize(getVariable(".meal"));.@x++){
+		if( invhasitem(getVariable(".meal["+.@x+"]")) ){
+			if(.@print) mes "["+CStr("o","green")+"]"+Itemlink(getVariable(".meal["+.@x+"]"));
+			if(.@price) mes "Price: "+CZeny(getiteminfo(getVariable(".meal["+.@x+"]"),0));
+			.@n--;
+		}else{
+			if(.@print) mes "["+CStr("x","red")+"]"+Itemlink(getVariable(".meal["+.@x+"]"));
+			if(.@price) mes "Price: "+CZeny(getiteminfo(getVariable(".meal["+.@x+"]"),0));
+		}
+	}
+	return .@n;
+}
+
+function	script	F_Customer_Bill	{
+	mes "[Customer]","Waiter? I want to pay my bill.";
+	next;
+	mes "["+strcharinfo(0)+"]","Let me check your bill.",CStr("(calculating the price)","red");
+	next;
+	.@total = 0;
+	for(.@x=0; .@x < getarraysize(getVariable(".meal"));.@x++){
+		//set exp
+		SubStatus(getMealLevel(getVariable(".meal["+.@x+"]"))*10);
+		.@total = .@total + getiteminfo(getVariable(".meal["+.@x+"]"),0);
+	}
+	mes "===== Customer Bill =====";
+	F_Customer_OrderList(0,1,1);
+	mes CStr("Total ","red")+"[ "+CZeny(.@total)+" ]";
+	next;
+	mes "["+strcharinfo(0)+"]","Ok here's your bill.";
+	next;
+	emotion e_cash;
+	mes "[Customer]","(Pay "+CZeny(.@total)+")";
+	// set wages
+	setVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]",getVariable(".WaiterWages["+arrfind(".CurrentWaiter$",strcharinfo(0),"CustomerManager")+"]","CustomerManager")+(.@total*getVariable(".zenyPercent[0]","CustomerManager")/100),"CustomerManager");
+	return;
+}
+
+function	script	F_Customer_MealCheck	{
+	mes "["+strcharinfo(0)+"]","May I check your order?";
+	next;
+	mes "[Customer]","Sure~ Here it is.";
+	next;
+	mes "[Order List]";
+	F_Customer_OrderList(0,1);
+	for(.@x=0; .@x < getarraysize(getVariable(".meal"));.@x++){
+		while( invhasitem(getVariable(".meal["+.@x+"]"),strcharinfo(0)) && !invhasitem(getVariable(".meal["+.@x+"]")) ){
+			next;
+			mes "[Order List]";
+			F_Customer_OrderList(0,1);
+			next;
+			.@id = invselect(strcharinfo(0),"","["+CStr("Serve","green")+"] ");
+			unittalk getcharid(3),"[Serve] "+getitemname(.@id);
+			if( arrhas(".meal",.@id) ){
+				setVariable(".waitingtime",getVariable(".waitingtime")+(getMealLevel(.@id)*getVariable(".cooktime_mul","Restaurant Chef"))+60);
+				invgetitem(invdelitem(.@id,strcharinfo(0)));
+				emotion e_rice;
+				//mes "[Customer]","Wow this ",Itemlink(.@id),"looks so tasty..";
+			}else{
+				emotion e_hmm;
+				mes "[Customer]","Erm? But I didn't order ",Itemlink(.@id);
+				next;
+				emotion e_sry,1;
+				mes "["+strcharinfo(0)+"]","Opps my mistake.";
+			}
+		};
+	}
+	next;
+	if(!F_Customer_OrderList()){
+		mes "["+strcharinfo(0)+"]","Looks like all of your order are here.","Enjoy your meal~";
+		next;
+		emotion e_rice;
+		mes "[Customer]","Thank you~";
+		setVariable(".order",4);
+		stopnpctimer;
+		close2;
+		.@t = 10;
+		for(.@x=0;.@x<getarraysize(getVariable(".meal"));.@x++){
+			.@t = .@t + (getMealLevel(getVariable(".meal["+.@x+"]"))*getVariable(".cooktime_mul","Restaurant Chef"));
+		}
+		sleep rand(.@t/2,.@t)*1000;
+		startnpctimer;
+		setVariable(".order",5);
+	}else{
+		mes "["+strcharinfo(0)+"]","Currently we are waiting for your remaining order to be done.";
+		next;
+		emotion e_swt,1;
+		mes "["+strcharinfo(0)+"]","Please wait for some moment."; 
+	}
+	return;
+}
+
+function	script	F_Customer	{
+npcindistance();
+	if( arrhas(".CurrentWaiter$",strcharinfo(0),"CustomerManager") && !getvariableofnpc(.status,"CustomerManager")){
+		if( getVariable(".servingchar$") != "" && getVariable(".servingchar$") != strcharinfo(0) ){
+			mes "["+strcharinfo(0)+"]","Looks like ["+getVariable(".servingchar$")+"] is serving this customer.";
+			end;
+		}
+		setVariable(".servingchar$",strcharinfo(0));
+		if(getVariable(".order")==0){
+			mes "[Customer]",(rand(2)?"Hello":"Hi")+", menu please?";
+			next;
+			if(invhasitem(getvariableofnpc(.menuid,"Restaurant Menu"),strcharinfo(0))){
+				invdelitem(getvariableofnpc(.menuid,"Restaurant Menu"),strcharinfo(0));
+				unittalk getcharid(3),"[Give] "+getitemname(getVariable(".menuid","Restaurant Menu"));
+				mes "["+strcharinfo(0)+"]","Sure~ Here's the menu.";
+				setVariable(".order",1);
+				setVariable(".waitingtime",getVariable(".waitingtime")+rand(getVariable(".waitingtime[0]","CustomerManager"),getVariable(".waitingtime[1]","CustomerManager")));
+				stopnpctimer;
+				close2;
+				sleep rand(5,10)*1000;
+				startnpctimer;
+				setVariable(".order",2);
+			}else{
+				mes "["+strcharinfo(0)+"]","Give me a second.",CStr("(I got to take menu first.)","RED");
+			}
+		}else if(getVariable(".order")==1){
+			mes "[Customer]","Hmm...let me read the menu please?";
+			next;
+			mes "["+strcharinfo(0)+"]","Of course~ I'll come later.";
+		}else if(getVariable(".order")==2){
+			invgetitem(getvariableofnpc(.menuid,"Restaurant Menu"),strcharinfo(0));
+			unittalk getcharid(3),"[Take] "+getitemname(getVariable(".menuid","Restaurant Menu"));
+			setVariable(".waitingtime",getVariable(".waitingtime")+rand(getVariable(".waitingtime[0]","CustomerManager"),getVariable(".waitingtime[1]","CustomerManager")));
+			emotion e_ho;
+			mes "[Customer]","Here's is my order: ";
+			F_Customer_OrderList(1);
+			setVariable(".order",3);
+			next;
+			emotion e_ok,1;
+			mes "["+strcharinfo(0)+"]","Ok~ Please wait a moment~";
+		}else if(getVariable(".order")==3){
+			F_Customer_MealCheck();
+		}else if(getVariable(".order")==4){
+			mes "[Customer]","Yummy....";
+			next;
+			mes "["+strcharinfo(0)+"]","The customer seen enjoying the meal.","Better don't disturb.";
+		}else if(getVariable(".order")==5){
+			F_Customer_Bill();
+			close2;
+			F_Customer_Refresh();
+		}
+	}else{
+		mes "[Customer]",getvariableofnpc(.npcWait$[rand(getarraysize(getvariableofnpc(.npcWait$,"CustomerManager")))],"CustomerManager");
+	}
+	end;
+}

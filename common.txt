@@ -1,0 +1,399 @@
+//===== rAthena Script =======================================
+//= Common Useful Function
+//===== By: ==================================================
+//= Yuchinin
+//===== Current Version: =====================================
+//= 1.2
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= A common useful function I wrote these few years.
+//= Hoping with these can help other to write useful script.
+//=====******** Note ********=================================
+//= This will be the core of my other script.
+//= Better let it load first before adding my other script.
+//===== Additional Comments: =================================
+//= 1.0 Initial script.
+//= 1.1 Change function arrdel from using 'value' to 'index'
+//= 1.2 Fixed sql query bug
+//============================================================
+
+//===================================
+//=	walktonpc({<unitid>,<distance>})
+//= walk character in npc <distance>
+//===================================
+function	script	walktonpc	{
+	.@rid = getarg(0,getcharid(3));
+	.@distance = getarg(1,1);
+	getmapxy(.@mc$,.@xc,.@yc,0);
+	getmapxy(.@mn$,.@xn,.@yn,1);
+	if(.@xc > .@xn) .@xx = .@xn + .@distance;
+	else if(.@xc < .@xn) .@xx = .@xn - .@distance;
+	else .@xx = .@xn;
+	if(.@yc > .@yn) .@yy = .@yn + .@distance;
+	else if(.@yc < .@yn) .@yy = .@yn - .@distance;
+	else .@yy = .@yn;
+	unitwalk .@rid,.@xx,.@yy;
+	return;
+}
+
+//===================================
+//=	npcindistance(<distance>)
+//= check if distance with npc smaller or equal to <distance>
+//= return to the caller
+//= else walk in npc <distance> 
+//===================================
+function	script	npcindistance	{
+	.@distance = getarg(0,1);
+	getmapxy(.@mc$,.@xc,.@yc,0);
+	getmapxy(.@mn$,.@xn,.@yn,1);
+	.@d = distance(.@xc,.@yc,.@xn,.@yn);
+	//debugmes "distance = "+.@d;
+	if(.@d <= .@distance) return;
+	else{
+		walktonpc(getcharid(3),.@distance);
+		end;
+	}
+	//return (.@d <= .@distance?1:0);
+}
+
+//===================================
+//=	getVariable(<"npc variable name">,{"<owner>"})
+//= return variable value
+//= owner will be calling npc if omitted
+//===================================
+function	script	getVariable	{
+	return getvariableofnpc(getd(getarg(0)),getarg(1,strnpcinfo(3)));
+}
+
+//===================================
+//=	setVariable(<"npc variable name">,{<"owner">})
+//= set variable value
+//= owner will be calling npc if omitted
+//===================================
+function	script	setVariable	{
+	set getvariableofnpc(getd(getarg(0)),getarg(2,strnpcinfo(3))),getarg(1);
+	return;
+}
+
+//===================================
+//=	arradd("<arrayname>",<value>,{<"owner">})
+//= add value to array
+//= owner will be calling npc if omitted
+//===================================
+function	script	arradd	{
+	.@size = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
+	//debugmes ".@size = "+.@size;
+	setVariable(getarg(0)+"["+.@size+"]",getarg(1),getarg(2,strnpcinfo(3)));
+	.@size2 = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
+	//debugmes ".@size2 = "+.@size2;
+	if(.@size==.@size2) return 0;
+	return getarg(1);
+}
+
+//===================================
+//=	arrdel("<arrayname>",<index>,{<"owner">})
+//= delete index from array
+//= owner will be calling npc if omitted
+//===================================
+function	script	arrdel	{
+	.@size = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
+	deletearray getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))),1;
+/*	for(.@x=0;.@x < .@size;.@x++){
+		if( getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))) == getarg(1) ){
+			deletearray getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))),1;
+			//debugmes getarg(1)+" delete from "+getarg(0);
+			return getarg(1);
+		}
+	}
+*/
+	return 0;
+}
+
+//===================================
+// arrhas("<arrayname>",<value>,{<"owner">})
+//= check if value in array
+//= return 1 if in else return 0
+//===================================
+function	script	arrhas	{
+	.@size = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
+	//dispbottom ".@size = "+.@size;
+	for(.@x=0;.@x < .@size;.@x++){
+		//dispbottom "Compare "+getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3)))+" == "+getarg(1);
+		if( getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))) == getarg(1) ){
+			//dispbottom getarg(1)+" is in waiter part time";
+			return 1;
+		}
+	}
+	//dispbottom getarg(1)+" is not waiter part time";
+	return 0;
+}
+
+//===================================
+// arrfind("<arrayname>",<value>,{<"owner">})
+//= return first found value index in array
+//= return -1 if not found
+//===================================
+function	script	arrfind	{
+	.@size = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
+	for(.@x=0;.@x < .@size;.@x++){
+		if( getVariable(getarg(0),getarg(2,strnpcinfo(3))) == getarg(1) ){
+			return .@x;
+		}
+	}
+	return -1;
+}
+
+//===================================
+// arrselect("<arrayname>",{<"label">,"<owner>"})
+//= return selected array value after selection
+//= label add before selection	
+//= owner will be calling npc if omitted
+//===================================
+function	script	arrselect	{
+	.@blist$ = "25003";
+	.@arrName$ = getarg(0);
+	.@owner$ = getarg(2,strnpcinfo(3));
+	.@label$ = getarg(1,"");
+	.@size = getarraysize(getVariable(.@arrName$,.@owner$));
+	.@m$ = "";
+	for(.@x=0;.@x<.@size;.@x++){
+		.@m$ = .@m$+.@label$+getVariable(.@arrName$+"["+.@x+"]",.@owner$)+":";
+	}
+	return getVariable(.@arrName$+"["+(select(.@m$)-1)+"]",.@owner$);
+}
+//==============================
+//= UpperFirst("<string>")
+//= return string with first string capital
+//==============================
+function	script	UpperFirst	{
+	.@s$ = getarg(0);
+	return Strtoupper(charat(.@s$,0)) + delchar(.@s$,0);
+	//return setchar(.@s$, charat(.@s$,0), 0);
+}
+
+function	script	BubbleComb	{	
+// BubbleComb(arr[,type]); Sorts the given array (type 1 = ascending (default); 2 = descending)
+	set .@Type,(getarg(1,1) == 2 ? -1 : 1);
+	set .@Gap,set(.@Size,getarraysize(getarg(0)));
+	do {
+		if(.@Gap>1) set .@Gap,(.@Gap*100)/140;
+		set .@Swap,0;
+		for(set .@i,0; (.@i+.@Gap)<.@Size; set .@i,.@i+1){
+			sleep2( (.@i%1024==0)*20 );
+			if(getelementofarray(getarg(0),.@i)*.@Type > getelementofarray(getarg(0),.@i+.@Gap)*.@Type){
+				set .@tmp,getelementofarray(getarg(0),.@i);
+				set getelementofarray(getarg(0),.@i),getelementofarray(getarg(0),.@i+.@Gap);
+				set getelementofarray(getarg(0),.@i+.@Gap),.@tmp;
+				set .@Swap,1;
+			}
+		}
+	} while(.@Swap || .@Gap>1);
+	return;
+}
+
+//=========================================
+//= getRemain(<sec>)
+//= return remaining time string
+//=========================================
+function	script	getRemain	{
+	.@timeL = getarg(0);
+	if(((((.@timeL)/60)/60)/24)>0){
+		return (((((.@timeL)/60)/60)/24)>0?((((.@timeL)/60)/60)/24)+" Day ":"");
+	}
+	//.@outstr$ = .@outstr$+(((((.@timeL)/60)/60)/24)>0?((((.@timeL)/60)/60)/24)+" Day ":"");
+	.@outstr$ = .@outstr$+((((.@timeL)/60)/60)>0?(((.@timeL)/60)/60)+" Hour ":"");
+	.@outstr$ = .@outstr$+((((.@timeL)/60)%60)>0?(((.@timeL)/60)%60)+" Min ":"");
+	.@outstr$ = .@outstr$+(((.@timeL)%60)>0?((.@timeL)%60)+" Sec ":"");
+	return .@outstr$;
+}
+
+//=========================================
+//= CStr(<"string to change color">,{<"color name">})
+//= return string with selected color
+//=========================================
+function	script	CStr	{
+setarray .color_str$,"BLACK","RED","GREEN","BLUE","YELLOW","TEAL","PURPLE","GRAY","WHITE","BROWN","SILVER","GOLD","MITHRIL";
+setarray .color_code$,"000000","FF0000","04B404","0000FF","FFFF00","00FFFF","FF00FF","C0C0C0","FFFFFF","996600","999999","FFCC00","CCCCCC";
+.@color_in$ = getarg(1,"BLACK");
+.@str$ = getarg(0,"null");
+for(.@x=0; .@x < getarraysize(.color_str$); .@x++){
+	if(strtoupper(.@color_in$) == .color_str$[.@x]){
+		.@color$ = .color_code$[.@x];
+		break;
+	}
+}
+if(.@color$ == "") .@color$ = .color_code$[0];	// default to black if color not found in array
+return "^"+.@color$+.@str$+"^000000";
+}
+
+//=========================================
+//= CZeny(<zeny>,{<"delimiter">,<"symbol">})
+//= return ease look zeny string
+//=========================================
+function	script	CZeny	{
+	.@number$  = getarg(0);
+	.@delimiter$ = getarg(1,",");
+	.@symbol$ = getarg(2,"z");
+	.@length   = getstrlen(.@number$);
+	.@numberSeparated$ = "";
+	if ("" != .@number$ &&  3 < .@length) {
+		while (.@length > 3) {
+			.@numberSeparated$ = ("" != .@numberSeparated$) ? substr(.@number$, .@length - 3, .@length - 1) + .@delimiter$ + .@numberSeparated$ : substr(.@number$, .@length - 3, .@length - 1);
+			.@length = .@length - 3;
+		}
+		.@numberSeparated$ = substr(.@number$, 0,  .@length - 1) + .@delimiter$ + .@numberSeparated$;
+	}
+	return ((.@numberSeparated$ != "") ? .@numberSeparated$ : .@number$)+.@symbol$;
+}
+
+//=========================================
+//= Itemlink(<itemid>)
+//= return item string with itemlink added
+//=========================================
+function	script	Itemlink	{
+	.@id = getarg(0);
+	return "<ITEMLINK>"+getitemname(.@id)+"<INFO>"+.@id+"</INFO></ITEMLINK>";
+}
+
+//= Below this will add a new custom inventory system ===============================
+//= This system are useful for someone that hope npc can have inventory
+//===================================================================================
+
+//=========================================
+//= Yuchinin Custom Setup Npc
+//=========================================
+-	script	Yuchinin_Custom_Setup	-1,{
+OnInit:
+.install_custom_inv = 1;
+
+.@sql$ = "CREATE TABLE IF NOT EXISTS `custom_inventory` (`itemid` int(11) NOT NULL,`amount` int(11) NOT NULL DEFAULT '0',`owner` varchar(25) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+
+if(.install_custom_inv){
+	query_sql(.@sql$);
+	debugmes "table name [ custom_inventory ] installed!";
+}
+end;
+}
+
+//===================================
+//=	invcount("<owner>")
+//= return inventory count
+//===================================
+function	script	invcount	{
+	.@owner$ = getarg(0,strnpcinfo(3));
+	if(.@owner$=="ALL") query_sql("SELECT COUNT(*) as count FROM custom_inventory",.@count);
+	else query_sql("SELECT COUNT(*) as count FROM custom_inventory where owner = '"+.@owner$+"'",.@count);
+	return .@count;
+}
+
+//===================================
+//=	invcountitem(<itemid>,"<owner>")
+//= return item count in inventory
+//===================================
+function	script	invcountitem	{
+	.@itemid = getarg(0);
+	.@owner$ = getarg(1,strnpcinfo(3));
+	if(.@owner$=="ALL") query_sql("SELECT sum as amount FROM custom_inventory where itemid = "+.@itemid,.@amount);
+	else query_sql("SELECT amount FROM custom_inventory where itemid = "+.@itemid+" AND owner = '"+.@owner$+"'",.@amount);
+	return .@amount;
+}
+
+//===================================
+//=	invselect("<owner>","<blacklistid>","<label>")
+//= add label before selection
+//= return itemid after selection
+//===================================
+function	script	invselect	{
+	.@blist$ = "25003";
+	.@owner$ = getarg(0,strnpcinfo(3));
+	.@blacklist$ = getarg(1,"");
+	.@label$ = getarg(2,"");
+	if(.@owner$=="ALL") .@sql = query_sql("SELECT itemid,amount,owner FROM custom_inventory",.@itemid,.@amount,.@owner$);
+	else .@sql = query_sql("SELECT itemid,amount,owner FROM custom_inventory where instr('"+.@blacklist$+.@blist$+"',itemid) = 0 AND owner = '"+.@owner$+"'",.@itemid,.@amount,.@owner$);
+	.@m$ = "";
+	for(.@x=0;.@x<.@sql;.@x++){
+		.@m$ = .@m$+.@label$+(.@owner$=="ALL"?.@owner$[.@x]+" ":"")+"["+.@amount[.@x]+"]"+getitemname(.@itemid[.@x])+":";
+	}
+	return .@itemid[select(.@m$)-1];
+}
+
+//===================================
+//=	invgetitem(<itemid>,"<owner>",{<amount>})
+//= return itemid if success
+//= return 0 if fail
+//===================================
+function	script	invgetitem	{
+	.@itemid = getarg(0);
+	.@owner$ = getarg(1,strnpcinfo(3));
+	.@amount = getarg(2,1);
+	.@count = callfunc("invcountitem",.@itemid,.@owner$);
+	if(getitemname(.@itemid)!="null"){
+		if(.@count<=0) query_sql("INSERT INTO `custom_inventory` VALUES ("+.@itemid+","+.@amount+", '"+.@owner$+"')");
+		else query_sql("UPDATE `custom_inventory` set amount = amount + "+.@amount+" where itemid = "+.@itemid+" AND owner = '"+.@owner$+"'");
+	}else{
+		debugmes "invgetitem id "+.@itemid+" is not a valid item";
+	}
+	.@count2 = callfunc("invcountitem",.@itemid,.@owner$);
+	//debugmes "get .@count = "+.@count+" .@count2 = "+.@count2+" owner$ = "+.@owner$;
+	if(.@count == .@count2){
+		debugmes "invgetitem Fail to get "+.@amount+" x "+getitemname(.@itemid)+" ["+.@owner$+"]";
+		return 0;
+	}
+	return .@itemid;
+}
+
+//===================================
+//=	invhasitem(<itemid>,"<owner>")
+//= return itemid if have item
+//= return 0 if don't have item
+//===================================
+function	script	invhasitem	{
+	.@itemid = getarg(0);
+	.@owner$ = getarg(1,strnpcinfo(3));
+	if(.@owner$=="ALL") .@sql = query_sql("SELECT itemid FROM custom_inventory where itemid = "+.@itemid+";",.@item);
+	else .@sql = query_sql("SELECT itemid FROM custom_inventory where owner = '"+.@owner$+"' AND itemid = "+.@itemid+";",.@item);
+	if(.@sql>0) return .@itemid;
+	return 0;
+}
+
+//===================================
+//=	invdelitem(<itemid>,"<owner>",{<amount>})
+//= return itemid if success
+//= return 0 if fail
+//===================================
+function	script	invdelitem	{
+	.@itemid = getarg(0);
+	.@owner$ = getarg(1,strnpcinfo(3));
+	.@amount = getarg(2,1);
+	.@count = callfunc("invcountitem",.@itemid,.@owner$);
+	if(getitemname(.@itemid)!="null") {
+		query_sql("UPDATE custom_inventory set amount = amount - "+.@amount+" where owner = '"+.@owner$+"' AND itemid = "+.@itemid+";");
+		query_sql("DELETE FROM custom_inventory where amount <= 0 AND owner = '"+.@owner$+"' AND itemid = "+.@itemid+";");
+	}else{
+		debugmes "invdelitem id "+.@itemid+" is not a valid item";
+	}
+	.@count2 = callfunc("invcountitem",.@itemid,.@owner$);
+	//debugmes "del .@count = "+.@count+" .@count2 = "+.@count2+" owner$ = "+.@owner$;
+	if(.@count == .@count2){
+		debugmes "invdelitem Fail to del "+.@amount+" x "+getitemname(.@itemid)+" ["+.@owner$+"]";
+		return 0;
+	}
+	return .@itemid;
+}
+
+//===================================
+//=	invclear("<owner>")
+//= clear all inventory
+//===================================
+function	script	invclear	{
+	.@owner$ = getarg(0,strnpcinfo(3));
+	.@count = callfunc("invcount",.@owner$);
+	if(.@owner$=="ALL") query_sql("delete FROM custom_inventory");
+	else query_sql("delete FROM custom_inventory where owner = '"+.@owner$+"'");
+	.@count2 = callfunc("invcount",.@owner$);
+	if(.@count==.@count2){
+		return 0;
+	}
+	return 1;
+}
