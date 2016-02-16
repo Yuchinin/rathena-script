@@ -22,6 +22,8 @@ function arradd;
 function arrlist;
 deletearray @learn$,getarraysize(@learn$);
 deletearray @wrong$,getarraysize(@wrong$);
+deletearray @answer$,getarraysize(@answer$);
+deletearray @myanswer$,getarraysize(@myanswer$);
 	mes .n$,"初めまして、お名前わ？";
 	next;
 	input @in$;
@@ -35,14 +37,20 @@ deletearray @wrong$,getarraysize(@wrong$);
 	next;
 	if(select("読みます","問題")==1){
 		for(@x=0;@x<getarraysize(getd("."+@prefix$+"gana50$"));@x++){
-			mes getd("."+@prefix$+"gana50$["+@x+"]")+" pronounce as "+getd(".english50$["+@x+"]");
+			mes .n$,getd("."+@prefix$+"gana50$["+@x+"]")+" pronounce as "+getd(".english50$["+@x+"]");
 			next;
+			if(select("Next","Break")==2) break;
 		}
 		end;
 	}
-	mes "問題分量？";
+	mes .n$,"問題分量？";
 	input @amount,10,getarraysize(.english50$);
 	mes "分量: "+@amount;
+	next;
+	mes .n$,"モード?";
+	@s = select("練習","試験");
+	mes (@s==1?"練習":"試験");
+	@mode = (@s==1?0:1);
 	next;
 	mes .n$,"始る！";
 	next;
@@ -55,18 +63,27 @@ deletearray @wrong$,getarraysize(@wrong$);
 		@point++;
 		mes @point+".　発音してください。","[ "+@q$+" ]";
 		input @in1$;
-		if(@in1$==@a$){
+		if(compare(@a$,@in1$)){
 			mes CStr("正解!","green"),"Answer is","[ "+CStr(@a$,"green")+" ]";
 			if(!arrhas("@learn$",@q$)) arradd("@learn$",@q$);
 		}else{
 			mes CStr("Wrong!","red"),"You should pronounce it","[ "+CStr(@a$,"green")+" ]";
-			if(!arrhas("@wrong$",@q$)) arradd("@wrong$",@q$);
+			if(!arrhas("@wrong$",@q$)){
+				arradd("@wrong$",@q$);
+				arradd("@answer$",@a$);
+				arradd("@myanswer$",@in1$);
+			}
+			if(@mode){
+				next;
+				mes .n$,"試験失敗します！";
+				end;
+			}
 		}
 		//mes "Point: "+@point;
 		next;
 	}while(@point < @amount);
 	@sec_use = gettimetick(2) - @sec_use;
-	mes .n$,"おめでと～","特訓終了！","";
+	mes .n$,"おめでと～","特訓終了！","用時："+getRemain(@sec_use,1);
 	next;
 	if(getarraysize(@learn$)){
 		mes .n$,"Learned List:";
@@ -77,15 +94,15 @@ deletearray @wrong$,getarraysize(@wrong$);
 	next;
 	if(getarraysize(@wrong$)){
 		mes .n$,"Wrong List:";
-		arrlist("@wrong$");
+		arrlist("@wrong$","@answer$","@myanswer$");
 	}else{
 		mes .n$,"Well done!","You score all the quiz!";
 	}
 	close;
-	
+
 function arrlist {
 	for(.@x=0;.@x<getarraysize(getd(getarg(0)));.@x++){
-		mes "  "+(.@x+1)+". "+getd(getarg(0)+"["+.@x+"]");
+		mes "  "+(.@x+1)+". "+getd(getarg(0)+"["+.@x+"]")+(getarg(1,"")!=""?" [ "+CStr(getd(getarg(1,"")+"["+.@x+"]"),"green")+" ]":"")+(getarg(2,"")!=""?" [ "+CStr(getd(getarg(2,"")+"["+.@x+"]"),"red")+" ]":"");
 	}
 	return;
 }
@@ -114,14 +131,14 @@ setarray .english50$,"a","i","u","e","o",
 					"ka","ki","ku","ke","ko",
 					"sa","shi","su","se","so",
 					"ta","chi","tsu","te","to",
-					"ha","hi","hu","he","ho",
+					"ha","hi","hu:fu","he","ho",
 					"ma","mi","mu","me","mo",
 					"ya","yu","yo",
 					"ra","ri","ru","re","ro",
-					"wa","wo","nn",
+					"wa","o","nn",
 					"ga","gi","gu","ge","go",
-					"za","zi","zu","ze","zo",
-					"da","zi","zu","de","do",
+					"za","ji","zu","ze","zo",
+					"da","di:ji","du:zu","de","do",
 					"ba","bi","bu","be","bo",
 					"pa","pi","pu","pe","po";
 setarray .hiragana50$,"あ","い","う","え","お",
