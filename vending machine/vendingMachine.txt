@@ -3,7 +3,7 @@
 //===== By: ==================================================
 //= Yuchinin
 //===== Current Version: =====================================
-//= 1.0
+//= 1.1
 //===== Compatible With: =====================================
 //= rAthena Project
 //===== Description: =========================================
@@ -21,6 +21,7 @@
 //= 3. [Note] Some of the item data has been change ( 673,677,674,11506 ~ 11512 )
 //===== Additional Comments: =================================
 //= 1.0 Initial release.
+//= 1.1 Fixed F_Beverage function not found error and also add the description file
 //============================================================
 
 Function	script	CCoin	{
@@ -186,6 +187,49 @@ airplane_01,49,82,0	duplicate(cslotmachine)	Slot Machine::slotmachine05	HIDDEN_N
 airplane_01,49,79,0	duplicate(cslotmachine)	Slot Machine::slotmachine06	HIDDEN_NPC
 airplane,49,82,0	duplicate(cslotmachine)	Slot Machine::slotmachine07	HIDDEN_NPC
 airplane,49,79,0	duplicate(cslotmachine)	Slot Machine::slotmachine08	HIDDEN_NPC
+
+function	script	F_Beverage	{
+	sit;
+	.@item = getarg(0);
+	.@mode = getarg(1,0);
+	.@val = getarg(2,-1);
+	disable_items;
+	soundeffect "se_drink_potion.wav",1;
+	progressbar "",1;
+	if(.@mode==0){			// hp
+		if(.@val<0) percentheal .@val*-1,0;
+		else heal .@val,0;
+		specialeffect2 207;
+	}else if(.@mode==1){	// sp
+		if(.@val<0) percentheal 0,.@val*-1;
+		else heal 0,.@val;
+		specialeffect2 208;
+	}else if(.@mode==2){	// cure all
+		for(.@i=0;.@i<=10;.@i++)
+			sc_end .@i;
+	sc_end SC_HALLUCINATION;
+		specialeffect2 209;
+	}else if(.@mode==3){	// hp &  sp/2
+		if(.@val<0) percentheal .@val*-1,(.@val*-1)/2;
+		else heal .@val,.@val/2;
+		specialeffect2 207;
+		specialeffect2 208;
+	}else if(.@mode==4){	// hp & cure all
+		if(.@val<0) percentheal .@val*-1,(.@val*-1)/2;
+		else heal .@val,.@val/2;
+		for(.@i=0;.@i<=10;.@i++)
+			sc_end .@i;
+		sc_end SC_HALLUCINATION;
+		specialeffect2 209;
+		specialeffect2 207;
+		specialeffect2 208;
+	}
+	emotion e_sigh,1;
+	enable_items;
+	stand;
+	if(countitem(.@item)) delitem .@item,1;
+	return;
+}
 
 moc_para01,34,38,5	script	Beverage Vending Machine::ven	564,{
 getmapxy(.@m$,.@x,.@y,0);

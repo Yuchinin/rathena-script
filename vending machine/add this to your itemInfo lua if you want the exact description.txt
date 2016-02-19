@@ -1,0 +1,150 @@
+	[11506] = {
+		unidentifiedDisplayName = "Fanta Orange",
+		unidentifiedResourceName = "환타오렌지캔",
+		unidentifiedDescriptionName = {
+			"Flavor of the orange exact in refreshing carbonic acid!",
+			"^000088Recovers 10% HP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Fanta Orange",
+		identifiedResourceName = "환타오렌지캔",
+		identifiedDescriptionName = {
+			"Flavor of the orange exact in refreshing carbonic acid!",
+			"^000088Recovers 10% HP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11507] = {
+		unidentifiedDisplayName = "Fanta Grape",
+		unidentifiedResourceName = "환타그레이프캔",
+		unidentifiedDescriptionName = {
+			"Flavor of the sweet grape spreads the mouth all the way!",
+			"^000088Recovers 10% SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Fanta Grape",
+		identifiedResourceName = "환타그레이프캔",
+		identifiedDescriptionName = {
+			"Flavor of the sweet grape spreads the mouth all the way!",
+			"^000088Recovers 10% SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11508] = {
+		unidentifiedDisplayName = "Karada Meguricha",
+		unidentifiedResourceName = "카라다메구리차",
+		unidentifiedDescriptionName = {
+			"Karada Meguri-cha.",
+			"^000088Clean your body and cure all bad status^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Karada Meguricha",
+		identifiedResourceName = "카라다메구리차",
+		identifiedDescriptionName = {
+			"Karada Meguri-cha.",
+			"^000088Clean your body and cure all bad status^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11509] = {
+		unidentifiedDisplayName = "Black Tea Kochakaden",
+		unidentifiedResourceName = "홍차화전",
+		unidentifiedDescriptionName = {
+			"Black Tea Kochakaden.",
+			"^000088Recovers 10% HP & 5% SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Black Tea Kochakaden",
+		identifiedResourceName = "홍차화전",
+		identifiedDescriptionName = {
+			"Black Tea Kochakaden.",
+			"^000088Recovers 10% HP & 5% SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11510] = {
+		unidentifiedDisplayName = "Coca Cola Zero",
+		unidentifiedResourceName = "코카콜라제로",
+		unidentifiedDescriptionName = {
+			"The same taste of the original coca cola without the added sugar.",
+			"^000088Recovers about 1000 HP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Coca Cola Zero",
+		identifiedResourceName = "코카콜라제로",
+		identifiedDescriptionName = {
+			"The same taste of the original coca cola without the added sugar.",
+			"^000088Recovers about 1000 HP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11511] = {
+		unidentifiedDisplayName = "Diet Coca Cola",
+		unidentifiedResourceName = "노칼로리코카콜라",
+		unidentifiedDescriptionName = {
+			"Although no calorie content, the coca cola it's tasty.",
+			"You can taste lightly, the coca cola of 0 kilo calories.",
+			"^000088Recovers about 100 SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Diet Coca Cola",
+		identifiedResourceName = "노칼로리코카콜라",
+		identifiedDescriptionName = {
+			"Although no calorie content, the coca cola it's tasty.",
+			"You can taste lightly, the coca cola of 0 kilo calories.",
+			"^000088Recovers about 100 SP^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
+
+	[11512] = {
+		unidentifiedDisplayName = "Coca Cola",
+		unidentifiedResourceName = "코카콜라",
+		unidentifiedDescriptionName = {
+			"Stimulation of carbon dioxide and unique flavor, not only healing thirst,",
+			"but refreshing both heart and body!",
+			"^000088Recovers 50% HP & 25% SP & Cure All^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		identifiedDisplayName = "Coca Cola",
+		identifiedResourceName = "코카콜라",
+		identifiedDescriptionName = {
+			"Stimulation of carbon dioxide and unique flavor, not only healing thirst,",
+			"but refreshing both heart and body!",
+			"^000088Recovers 50% HP & 25% SP & Cure All^000000.",
+			"^ffffff_^000000",
+			"Weight: ^77777710^000000"
+		},
+		slotCount = 0,
+		ClassNum = 0
+	},
