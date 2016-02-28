@@ -3,7 +3,7 @@
 //===== By: ==================================================
 //= Yuchinin
 //===== Current Version: =====================================
-//= 1.2
+//= 1.4
 //===== Compatible With: =====================================
 //= rAthena Project
 //===== Description: =========================================
@@ -16,7 +16,22 @@
 //= 1.0 Initial script.
 //= 1.1 Change function arrdel from using 'value' to 'index'
 //= 1.2 Fixed sql query bug
+//= 1.3 Added Url, npcmes
+//= 1.4 Added strcharinfo2 to avoid offline player return empty
+//= 	String
 //============================================================
+
+function	script	strcharinfo2	{
+	.@size = query_sql("select name, party_id, guild_id from `char` where char_id = "+getarg(1,getcharid(0)),.@n$,.@p,.@g);
+	if(.@size < 0) return "";
+	if(getarg(0)==0) return .@n$;
+	else if(getarg(0)==1){
+		return getpartyname(.@p);
+	}else if(getarg(0)==2){
+		return getguildname(.@g);
+	}
+	return "";
+}
 
 //===================================
 //=	walktonpc({<unitid>,<distance>})
@@ -162,6 +177,7 @@ function	script	arrselect	{
 	}
 	return getVariable(.@arrName$+"["+(select(.@m$)-1)+"]",.@owner$);
 }
+
 //==============================
 //= UpperFirst("<string>")
 //= return string with first string capital
@@ -193,18 +209,33 @@ function	script	BubbleComb	{
 }
 
 //=========================================
-//= getRemain(<sec>)
+//= getpercent(<currentval>,<maxval>)
+//= return percent rate
+//=========================================
+function	script	getpercent	{
+	.@current = getarg(0);
+	.@max = getarg(1);
+	return .@current*100/.@max;
+}
+
+//=========================================
+//= getRemain(<sec>,{<langtype>})
 //= return remaining time string
 //=========================================
 function	script	getRemain	{
 	.@timeL = getarg(0);
+	.@lang = getarg(1,0);
+	setarray .@day$," Day "," “ú ";
+	setarray .@hour$," Hour "," Žž ";
+	setarray .@min$," Min "," •ª ";
+	setarray .@sec$," Sec "," •b ";
 	if(((((.@timeL)/60)/60)/24)>0){
-		return (((((.@timeL)/60)/60)/24)>0?((((.@timeL)/60)/60)/24)+" Day ":"");
+		return (((((.@timeL)/60)/60)/24)>0?((((.@timeL)/60)/60)/24)+.@day$[.@lang]:"");
 	}
 	//.@outstr$ = .@outstr$+(((((.@timeL)/60)/60)/24)>0?((((.@timeL)/60)/60)/24)+" Day ":"");
-	.@outstr$ = .@outstr$+((((.@timeL)/60)/60)>0?(((.@timeL)/60)/60)+" Hour ":"");
-	.@outstr$ = .@outstr$+((((.@timeL)/60)%60)>0?(((.@timeL)/60)%60)+" Min ":"");
-	.@outstr$ = .@outstr$+(((.@timeL)%60)>0?((.@timeL)%60)+" Sec ":"");
+	.@outstr$ = .@outstr$+((((.@timeL)/60)/60)>0?(((.@timeL)/60)/60)+.@hour$[.@lang]:"");
+	.@outstr$ = .@outstr$+((((.@timeL)/60)%60)>0?(((.@timeL)/60)%60)+.@min$[.@lang]:"");
+	.@outstr$ = .@outstr$+(((.@timeL)%60)>0?((.@timeL)%60)+.@sec$[.@lang]:"");
 	return .@outstr$;
 }
 
@@ -245,6 +276,47 @@ function	script	CZeny	{
 		.@numberSeparated$ = substr(.@number$, 0,  .@length - 1) + .@delimiter$ + .@numberSeparated$;
 	}
 	return ((.@numberSeparated$ != "") ? .@numberSeparated$ : .@number$)+.@symbol$;
+}
+
+//=========================================
+//= npcmes(<"npcname">,"mes1:mes2|mes1:mes2")
+//= npcmes("Kafra","Hello adventurer, how are you?:This is my 2rd message.|Hmm... ok..:See you soon.|Bye.")
+//= after the delimiter | will auto next
+//=========================================
+function	script	npcmes	{
+	@n$ = getarg(0);
+	deletearray @T$,getarraysize(@T$);
+	explode(@T$,getarg(1),"|");
+	for(@x=0;@x<getarraysize(@T$);@x++){
+		mes @n$;
+		deletearray @TT$,getarraysize(@TT$);
+		explode(@TT$,@T$[@x],":");
+		for(@y=0;@y<getarraysize(@TT$);@y++){
+			mes @TT$[@y];
+		}
+		if(@x+1 < getarraysize(@T$)) next;
+	}
+	return;
+}
+
+//=========================================
+//= Navi(<"name">,<"mapname">{,< x >,< y >})
+//= return string with navigation added
+//=========================================
+function	script	Navi	{
+	.@name$ = getarg(0);
+	.@map$ = getarg(1);
+	.@x = getarg(2,0);
+	.@y = getarg(3,0);
+	return "<NAVI>"+.@name$+"<INFO>"+.@map$+","+.@x+","+.@y+",0,000,1</INFO></NAVI>";
+}
+
+//=========================================
+//= Url(<"url">{,<"Url Name">})
+//= return item string with itemlink added
+//=========================================
+function	script	Url	{
+	return "<URL>"+getarg(1,getarg(0))+"<INFO>"+getarg(0)+",300,300</INFO></URL>";
 }
 
 //=========================================
