@@ -3,7 +3,7 @@
 //===== By: ==================================================
 //= Yuchinin
 //===== Current Version: =====================================
-//= 1.4
+//= 1.4a
 //===== Compatible With: =====================================
 //= rAthena Project
 //===== Description: =========================================
@@ -19,6 +19,7 @@
 //= 1.3 Added Url, npcmes
 //= 1.4 Added strcharinfo2 to avoid offline player return empty
 //= 	String
+//= 1.4a Fixed arrdel
 //============================================================
 
 function	script	strcharinfo2	{
@@ -113,7 +114,7 @@ function	script	arradd	{
 //===================================
 function	script	arrdel	{
 	.@size = getarraysize(getVariable(getarg(0),getarg(2,strnpcinfo(3))));
-	deletearray getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))),1;
+	deletearray getVariable(getarg(0)+"["+getarg(1)+"]",getarg(2,strnpcinfo(3))),1;
 /*	for(.@x=0;.@x < .@size;.@x++){
 		if( getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))) == getarg(1) ){
 			deletearray getVariable(getarg(0)+"["+.@x+"]",getarg(2,strnpcinfo(3))),1;
@@ -325,7 +326,7 @@ function	script	Url	{
 //=========================================
 function	script	Itemlink	{
 	.@id = getarg(0);
-	return "<ITEMLINK>"+getitemname(.@id)+"<INFO>"+.@id+"</INFO></ITEMLINK>";
+	return "<ITEM>"+getitemname(.@id)+"<INFO>"+.@id+"</INFO></ITEM>";
 }
 
 //= Below this will add a new custom inventory system ===============================
